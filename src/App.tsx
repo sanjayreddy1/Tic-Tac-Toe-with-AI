@@ -9,6 +9,7 @@ import { Settings } from './components/Settings';
 import { Menu } from './components/Menu';
 import { Footer } from './components/Footer';
 import confetti from 'canvas-confetti';
+import { Analytics } from '@vercel/analytics/react';
 
 export default function App() {
   const [screen, setScreen] = useState<'home' | 'game' | 'settings'>('home');
@@ -159,6 +160,7 @@ export default function App() {
       )}
 
       <Footer />
+      <Analytics />
     </div>
   );
 }
