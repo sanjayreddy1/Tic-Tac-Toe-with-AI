@@ -1,0 +1,5 @@
+{
+  "name": "Radium 3D Tic Tac Toe",
+  "description": "A futuristic 3D Tic Tac Toe game with AI difficulty levels, multiplayer mode, and radium-glow effects.",
+  "requestFramePermissions": []
+}
