@@ -44,40 +44,98 @@ export default function App() {
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Handle tab visibility change - close game when tab is switched
+  // Handle page visibility (tab switching, home screen, app switching)
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // Tab is hidden (user switched to another tab)
-        console.log("Tab hidden - closing game");
+        // Page is hidden (user switched to another tab, home screen, or another app)
+        console.log("Page hidden - closing game");
         if (screen === 'game') {
           setScreen('home');
           resetGame();
         }
+        // Pause audio when hidden
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
+      } else {
+        // Page is visible again
+        console.log("Page visible again");
+        // Resume audio if sound is enabled and we're not in game (home screen)
+        if (settings.sound && screen === 'home') {
+          audioRef.current?.play().catch(() => console.log("Audio play blocked"));
+        }
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    // Handle mobile app switching and home screen
+    const handleBlur = () => {
+      console.log("Window blurred - user left the app/tab");
+      if (screen === 'game') {
+        setScreen('home');
+        resetGame();
+      }
     };
-  }, [screen]);
 
-  // Handle browser/tab close
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // Clean up before tab closes
+    // Handle when user returns to the app
+    const handleFocus = () => {
+      console.log("Window focused - user returned to app");
+    };
+
+    // Handle page unload (closing tab/browser)
+    const handleBeforeUnload = () => {
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
     };
 
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+    window.addEventListener('focus', handleFocus);
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('focus', handleFocus);
       window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [screen, settings.sound]);
+
+  // Handle page show/hide for mobile Safari and Android
+  useEffect(() => {
+    const handlePageHide = () => {
+      console.log("Page hide - user leaving page");
+      if (screen === 'game') {
+        setScreen('home');
+        resetGame();
+      }
+    };
+
+    const handlePageShow = () => {
+      console.log("Page show - user returning to page");
+    };
+
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('pageshow', handlePageShow);
+
+    return () => {
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('pageshow', handlePageShow);
+    };
+  }, [screen]);
+
+  // Handle mobile orientation change (sometimes triggers visibility change)
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      console.log("Orientation changed");
+    };
+
+    window.addEventListener('orientationchange', handleOrientationChange);
+
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange);
     };
   }, []);
 
@@ -87,7 +145,10 @@ export default function App() {
         audioRef.current = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
         audioRef.current.loop = true;
       }
-      audioRef.current.play().catch(() => console.log("Audio play blocked"));
+      // Only play if page is visible
+      if (!document.hidden) {
+        audioRef.current.play().catch(() => console.log("Audio play blocked"));
+      }
     } else {
       audioRef.current?.pause();
     }
