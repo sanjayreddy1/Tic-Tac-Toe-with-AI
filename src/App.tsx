@@ -7,8 +7,28 @@ import { motion } from 'motion/react';
 import { Player, checkWinner, getBestMove } from './gameLogic';
 import { Settings } from './components/Settings';
 import { Menu } from './components/Menu';
-import { Footer } from './components/Footer';
 import confetti from 'canvas-confetti';
+
+// Footer Component defined in the same file
+function Footer() {
+  return (
+    <footer className="py-6 text-center text-white/30 text-sm border-t border-white/5">
+      <p>
+        Created by{' '}
+        <motion.a
+          href="https://sanjayportfolio-nine.vercel.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-emerald-400/50 hover:text-emerald-400 transition-colors cursor-pointer inline-block"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Sanjay Kumar
+        </motion.a>
+      </p>
+    </footer>
+  );
+}
 
 export default function App() {
   const [screen, setScreen] = useState<'home' | 'game' | 'settings'>('home');
