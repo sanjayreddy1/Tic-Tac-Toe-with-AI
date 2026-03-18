@@ -20,8 +20,34 @@ export default function App() {
   const [winner, setWinner] = useState<Player | 'Draw'>(null);
   const [winningLine, setWinningLine] = useState<number[] | null>(null);
   const [settings, setSettings] = useState({ sound: true, vibration: true });
+  const [isAITurn, setIsAITurn] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Handle browser close/tab close
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // You can optionally show a confirmation dialog
+      // e.preventDefault();
+      // e.returnValue = '';
+    };
+
+    const handleUnload = () => {
+      // Clean up any resources if needed
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('unload', handleUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('unload', handleUnload);
+    };
+  }, []);
 
   useEffect(() => {
     if (settings.sound) {
@@ -64,11 +90,16 @@ export default function App() {
 
   useEffect(() => {
     if (gameMode === 'ai' && currentPlayer === 'O' && !winner) {
+      setIsAITurn(true);
       const timer = setTimeout(() => {
         const move = getBestMove(board, 'O', difficulty);
         handleMove(move);
+        setIsAITurn(false);
       }, 600);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        setIsAITurn(false);
+      };
     }
   }, [currentPlayer, gameMode, winner, board, difficulty]);
 
@@ -77,6 +108,7 @@ export default function App() {
     setCurrentPlayer('X');
     setWinner(null);
     setWinningLine(null);
+    setIsAITurn(false);
   };
 
   return (
@@ -107,7 +139,15 @@ export default function App() {
               animate={{ scale: 1, opacity: 1 }}
               className="text-4xl font-black tracking-tighter uppercase italic text-emerald-400 drop-shadow-[0_0_20px_rgba(52,211,153,0.6)]"
             >
-              {winner ? (winner === 'Draw' ? "It's a Draw!" : `${winner === 'X' ? playerNames.X : playerNames.O} Wins!`) : `${currentPlayer === 'X' ? playerNames.X : playerNames.O}'s Turn`}
+              {winner ? (
+                winner === 'Draw' ? "It's a Draw!" : `${winner === 'X' ? playerNames.X : playerNames.O} Wins!`
+              ) : (
+                gameMode === 'ai' && currentPlayer === 'O' ? (
+                  isAITurn ? "AI is thinking..." : "AI's Turn"
+                ) : (
+                  `${currentPlayer === 'X' ? playerNames.X : playerNames.O}'s Turn`
+                )
+              )}
             </motion.h2>
           </div>
 
@@ -279,4 +319,3 @@ function Stars() {
     </points>
   );
 }
-
