@@ -44,16 +44,30 @@ export default function App() {
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Handle browser close/tab close
+  // Handle tab visibility change - close game when tab is switched
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // You can optionally show a confirmation dialog
-      // e.preventDefault();
-      // e.returnValue = '';
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Tab is hidden (user switched to another tab)
+        console.log("Tab hidden - closing game");
+        if (screen === 'game') {
+          setScreen('home');
+          resetGame();
+        }
+      }
     };
 
-    const handleUnload = () => {
-      // Clean up any resources if needed
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [screen]);
+
+  // Handle browser/tab close
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Clean up before tab closes
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
@@ -61,11 +75,9 @@ export default function App() {
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('unload', handleUnload);
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('unload', handleUnload);
     };
   }, []);
 
@@ -201,7 +213,10 @@ export default function App() {
               Reset
             </button>
             <button 
-              onClick={() => setScreen('home')}
+              onClick={() => {
+                setScreen('home');
+                resetGame();
+              }}
               className="px-8 py-3 bg-white/5 border border-white/10 rounded-full text-white/70 font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all"
             >
               Home
