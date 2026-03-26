@@ -8,6 +8,7 @@ import { Player, checkWinner, getBestMove } from './gameLogic';
 import { Settings } from './components/Settings';
 import { Menu } from './components/Menu';
 import confetti from 'canvas-confetti';
+import { Analytics } from '@vercel/analytics/react';
 
 // Footer Component defined in the same file
 function Footer() {
@@ -295,6 +296,7 @@ export default function App() {
       )}
 
       <Footer />
+      <Analytics />
     </div>
   );
 }
